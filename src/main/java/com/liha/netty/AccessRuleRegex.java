@@ -4,24 +4,32 @@ import com.liha.Configs.SysConfig;
 import com.liha.entities.mysql.AccessRule;
 import com.liha.entities.mysql.AccessSystem;
 import com.liha.entities.mysql.RedisConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+@Component("accessRuleRegex")
 public class AccessRuleRegex {
     private static Map<Pattern,List<String>> regexMap;
     private static List<Pattern> regexList;
 
+    @Autowired
+    private SysConfig sysConfig;
+
     //存储每次解析出来的ip对应的数据。
     private static Map<String,List<String>> ipToRedisMap = new HashMap<>();
 
-    static {
+    @PostConstruct
+    public void instance(){
         regexMap = new HashMap<>();
         regexList = new ArrayList<>();
-        Map<AccessRule,AccessSystem> ruleMappingSys = SysConfig.ruleMappingSys;
+        Map<AccessRule,AccessSystem> ruleMappingSys = sysConfig.getRuleMappingSys();
         ruleMappingSys.forEach((rule,sys)->{
 
             //编译允许接入的规则的正则表达式
@@ -30,7 +38,7 @@ public class AccessRuleRegex {
 
             //规则对应的redis cluster
             int sysid = rule.getSysID();
-            List<RedisConfig> list = SysConfig.sysMappingRedis.get(sysid);
+            List<RedisConfig> list = sysConfig.getSysMappingRedis().get(sysid);
             List<String> valueList = new ArrayList<>();
             list.forEach(v->valueList.add(v.getIp()+":"+v.getPort()));
 

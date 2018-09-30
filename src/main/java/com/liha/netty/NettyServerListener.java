@@ -18,6 +18,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,9 @@ public class NettyServerListener {
 
     @Value("${netty.server.port}")
     private int backlog;
+
+    @Autowired
+    private RuleRegexDispatcherHandler ruleRegexDispatcherHandler;
 
     ServerBootstrap strap = new ServerBootstrap();
     EventLoopGroup boss = new NioEventLoopGroup();
@@ -65,19 +69,14 @@ public class NettyServerListener {
                                     .addLast(new RedisBulkStringAggregator())
                                     .addLast(new RedisArrayAggregator())
                                     .addLast(new RedisEncoder())
-                                    .addLast(new RuleRegexDispatcherHandler());
+                                    .addLast(ruleRegexDispatcherHandler);
                         }
                     })
                     .childOption(ChannelOption.AUTO_READ, false);
 
             ChannelFuture future = strap.bind(port).sync();
-            future.channel().closeFuture().sync();
         }catch (InterruptedException e) {
             LOGGER.error(ExceptionUtils.getStackTrace(e));
-        }finally {
-            boss.shutdownGracefully();
-            work.shutdownGracefully();
-            LOGGER.info("netty server closed success");
         }
     }
 }

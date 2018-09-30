@@ -1,7 +1,7 @@
 package com.liha;
 
-import com.liha.Configs.ProxySystemConfigLoad;
 import com.liha.netty.NettyServerListener;
+import com.liha.netty.redisclient.Initialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +13,15 @@ public class MyCommandLineRunner implements CommandLineRunner {
     private static Logger LOGGER= LoggerFactory.getLogger(MyCommandLineRunner.class);
 
     @Autowired
-    private ProxySystemConfigLoad configLoad;
+    private NettyServerListener nettyServerListener;
 
     @Autowired
-    private NettyServerListener nettyServerListener;
+    private Initialization initialization;
+
     @Override
     public void run(String... args) throws Exception {
-        configLoad.initialize();
+        initialization.initAll();
         nettyServerListener.start();
+        LOGGER.info("run success");
     }
 }
